@@ -1,0 +1,376 @@
+\documentclass[twoside]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}  
+\usepackage{algorithmicx}  
+\usepackage{algpseudocode}  
+\usepackage{amsmath}  
+  
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}  
+\renewcommand{\algorithmicensure}{\textbf{Output:}} 
+\usepackage{epsfig}
+\usepackage{graphicx} 
+
+\setlength{\oddsidemargin}{0.25 in}
+\setlength{\evensidemargin}{-0.25 in}
+\setlength{\topmargin}{-0.6 in}
+\setlength{\textwidth}{6.5 in}
+\setlength{\textheight}{8.5 in}
+\setlength{\headsep}{0.75 in}
+\setlength{\parindent}{0 in}
+\setlength{\parskip}{0.1 in}
+
+\newcommand{\lecture}[3]{
+   \pagestyle{myheadings}
+   \thispagestyle{plain}
+   \newpage
+   \setcounter{page}{1}
+   \noindent
+   \begin{center}
+   \framebox{
+      \vbox{\vspace{2mm}
+    \hbox to 6.28in { {\bf 10-708:Probabilistic Graphical Models
+10-702, Spring 2017 \hfill} }
+       \vspace{6mm}
+       \hbox to 6.28in { {\Large \hfill #1  \hfill} }
+       \vspace{6mm}
+       \hbox to 6.28in { {\it Lecturer: #2 \hfill Name: #3} }
+      \vspace{2mm}}
+   }
+   \end{center}
+   \markboth{#1}{#1}
+   \vspace*{4mm}
+}
+
+\begin{document}
+
+\lecture{Homework 1}{Eric Xing }{Yuan Liu(yuanl4)} % Lecture name, Lecturer, Scribes
+\section{Bayesian Network Solution}
+\subsection{I-map}
+\paragraph{Solution:}(Koller and Friedman Textbook Page 62)\\
+Let $X_1,...,X_n$ is a topological ordering of the variables in $\mathbb{X}$ relative to $\mathbb{G}$. We can first use the chain rule to represent $\mathbb{P}$:
+$$P(X_1,...,X_n)=\prod_{i=1}^n P(X_i|X_1,...,X_{i-1})$$
+Now, consider one of the factors $P(X_i|X_1,...,X_{i-1})$. Because $\mathbb{G}$ is a I-map for P, we have $$(X_i \perp NonDescendants_{x_i}|Pa_{x_i}^{\mathbb{G}})\in I(\mathbb{P})$$
+By the topological ordering assumption, all of $X_i$'s parents are in the set $X_1,...,X_{i-1}$. Furthermore, none of $X_i$'s descendants can possibly be in the set. Hence,
+$$\{X_1,...,X_{i-1}\}=Pa_{X_i}\cup Z$$
+where $Z \subset NonDescendants_{X_i}$. In addition to it, we already know  $(X_i \perp NonDescendants_{x_i}|Pa_{x_i}^{\mathbb{G}})\in I(\mathbb{P})$, so it follows that $(X_i \perp Z|Pa_{x_i})$. Hence we have that 
+$$P(X_i|X_1,...,X_{i-1}) = P(X_i|Pa_{X_i})$$
+Applying this transformation to all of the factors in the chain rule decomposition, the result follows.
+
+\subsection{D-separation}
+\begin{itemize}
+\item $B \perp G | A$: True. Since H is unobserved, and $G\rightarrow H \leftarrow F$ is a v-structure, influence cannot flow through H.
+\item $C \perp D | F$: False. Influence can flow along the path $C\leftarrow B \rightarrow D$.
+\item $C \perp D | A$: False. Influence can flow along the path $C\leftarrow B \rightarrow D$.
+\item $H \perp B |C,F$: True. Since F is observed and $H\leftarrow F \leftarrow C$ or $H\leftarrow F \leftarrow E$ are neither v-structure, then H can not flow through F.
+\end{itemize}
+\subsection{I-Equivalence}
+\begin{itemize}
+\item $G_1$ and $G_2$ has the same skeleton is a necessary, but not sufficient condition for $G_1$ and $G_2$ to be I-equivalent.
+\paragraph{Not sufficient part proof:} The v-structure and common parent structure have the same skeleton, but they are not I-equivalent.
+\paragraph{Necessary part proof:} Proof by contradiction. Assume $G_1$ and $G_2$ are I-equivalent, but they have different skeleton. In this situation, we can find a trail in one network that does not exist in the other. Assume this trail is $X_1 \rightleftharpoons X_2 \rightleftharpoons ... \rightleftharpoons X_i$ in $G_1$. Given all the v-structures in this trail, like $A_k\rightarrow B_k \leftarrow C_k$, let all the $\{B_k\}_{k}$ observed, and left others unobserved. Then $X_1 \perp X_2 | \{B_k\}_{k}$ in $G_2$, but  $X_1 \not\perp X_2 | \{B_k\}_{k}$ in $G_1$
+\item $G_1$ and $G_2$ has the same skeleton and same v-structures, is a sufficient, but not necessary condition for $G_1$ and $G_2$ to be I-equivalent.
+\paragraph{Sufficient part proof:} (http://www.wisdom.weizmann.ac.il/pgm/Ex/ps3\_sol.pdf) First we assume that $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_1)$ and we show that $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_2)$. If two graphs have the same skeleton, then they have the same trails. Lets look on the trails that between $X\in \mathbb{X}$ and $Y\in \mathbb{Y}$ that given $\mathbb{Z}$ is inactive in $G_1$, and then show this trail in $G_2$ is in active too. Consider two cases:
+\begin{itemize}
+\item[i] The trail in $G_1$ is inactive because some of the nodes on the trail that are not in v-structure are observed in $\mathbb{Z}$. Then clearly these nodes also blocks the trail in $G_2$
+\item[ii] Otherwise, all nodes on the trail that are not in a v-structure are not observed (not in $\mathbb{Z}$), but then for some v-structure $V_{i-1},V_i,V_{i+1}$ on the trail, none of the  of $V_i$ are observed. That is for every node V such that there is a directed path in $G_1$ from $V_i$ to V, all the nodes on the path are not observed. Consider such a directed path from such a $V_i$ to some V in $G_1$, then in $G_2$ this trail must also be directed the same, from $V_i$ to V, because other wise it introduces a v-structure that is not in $G_1$(either on this path itself, or with respect to $V_{i-1}\rightarrow V_i$), and clearly all it's nodes are not observed too. There fore this path also inactivates the trail between $\mathbb{X}$ and $\mathbb{Y}$(given $\mathbb{Z}$) in $G_2$ 
+\end{itemize}  
+Thus, $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_1)$ implies that every trail between any pair $X\in \mathbb{X}$ and $Y\in \mathbb{Y}$ that given $\mathbb{Z}$ is inactive in $G_1$, and showed for each such a trail that it is inactive in $G_2$. Since the two graphs have the same trails, then $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_2)$. Hence $I(G_1)\subset I(G_2)$, and by symmetry we also get that $I(G_2)\subset I(G_1)$, therefore $I(G_1) = I(G_2)$
+
+
+
+
+\paragraph{Not necessary part proof:} Consider complete graphs over a set of variables. Recall that a complete graph is one to which we cannot add additional arcs without causing cycles. Such graphs encode the empty set of conditional independence assertions. Thus, any two complete graphs are I-equivalent. Although they have the same skeleton, they invariably have different v-structures. 
+\end{itemize}
+
+
+
+
+\newpage
+\section{Independence \& Equivalence Testing Solution}
+\subsection{D-separation and Independence}
+\begin{itemize}
+\item[(1)] First, prove that D-separation implies conditional independence, or mathematically:
+$$desp(X,Y|Z) \Rightarrow X\perp Y |Z$$
+\paragraph{Solution}(Koller and Friedman Textbook Page 137) 
+Let ${U}={X}\cup {Y}\cup {Z}$.
+Let ${U}^* = {U}\cup Ancestors_U$.
+Let $G_{U^*}=G^+[ {U}]$ be the induced graph over $ {U}^*$, 
+and let H be the moralized graph $M[G_{U^*}]$. 
+Let $P_{U^*}$ be the Bayesian network distribution defined over $G_{U^*}$ in the obvious way:
+the CPD for any variable in $U^*$ is the same as in original distribution $P_B$. Because $U^*$ is upwardly closed, 
+all variables used in these CPDs are in $U^*$.\\
+Now, consider an independence assertion $(X\perp Y |Z)\in I(G)$; we want to prove that $P\models (X\perp Y |Z)$. By definition, if  $(X\perp Y |Z)\in I(G)$, we have that $desp(X,Y|Z)$. It follows that $sep_H(X,Y|Z)$, and hence that $(X\perp Y|Z)\in I(H)$. $P_{U^*}$ is a Gibbs distribution over H, and hence, $P_{U^*} \models (X\perp Y|Z)$. We know $P_{U^*}(U^*)$ is the same as $P_B(U^*)$. Hence, it follows that $P_B\models (X\perp Y |Z)$
+
+
+\item[(2)] Prove the completeness of the D-separation property.
+\item[(3)] Provide a pseudo-code and describe in detail an algorithm for testing D-separation.
+\paragraph{Solution}(Koller and Friedman Textbook Page 75) We use the following definition of active trail to find all the nodes that can be reached by X.
+\begin{itemize}
+\item Whenever we have a v-structure $X_{i-1}\rightarrow X_i \leftarrow X_{i+1}$, then $X_i$ or one of its descendants are in Z. 
+\item no other node along the trail is in Z.
+\end{itemize}
+So we first need to find all the ancestors of Z, and put them into A.(Using broad first search)\\
+Then we use broad-first search to find all the linked node.
+\end{itemize}
+\begin{algorithm}  
+        \caption{D-separation}  
+        \begin{algorithmic}[1]  
+            \Require Bayesian network graph: G;  
+            		 Source variables: X;   
+            		 Evidence variables: Z; 
+            \Ensure Reachable Set R  \\
+            //Step one: find all the ancestors of Z
+            \State $L \gets Z$  //Node to be visited
+            \State $A \gets \emptyset$  //Ancestors of Z  \\
+            //Broad first search
+            \While{$L\neq \emptyset$}
+            	\State Select some Y from L
+            	\State $L\gets L-\{Y\}$
+            	\If{$Y \not\in A$}
+            	 	\State $L\gets L \cup Pa_Y$
+            	\EndIf
+            	\State $A\gets A\cup \{Y\}$
+            \EndWhile
+            
+            //Step two:traverse active trails starting from X
+            \State $L\gets \{(X, \uparrow )\}$ //(Node,direction) to be visited
+            \State $V\gets \emptyset$ //(Node, direction) marked as visited
+            \State $R\gets \emptyset$ //Nodes reachable via active trail
+            \While
+            	//Select some (Y,d) from L
+            	\State $L\gets L-{(Y,d)}$
+            	\If{$(Y,d)\not\in V$}
+            		\If {$Y\not\in Z$}
+            			\State $R\gets R\cup \{Y\}$ // Y is reachable
+            		\EndIf
+            		\State $V\gets V\cup {(Y,d)}$  // Mark(Y,d) as visited
+            		\If{$d=\uparrow$ and $Y \not\in Z$} //Trail up through Y active if Y not in Z
+            			\For{each $Z\in Pa_Y$}
+            			//Y's parents to be visited from bottom
+            			 	\State $L\gets L\cup \{(Z, \uparrow)\}$
+            			\EndFor
+            			\For{each $Z\in Ch_Y$}
+            			//Y's children to be visited from top
+            			 	\State $L\gets L\cup \{(Z, \downarrow)\}$
+            			\EndFor
+            		\ElsIf { $d=\downarrow $}
+            			\If{$Y\not\in Z$}
+            			//Downward trails to Y's children are active
+            				\For{each $Z\in Ch_Y$}
+            					\State $L\gets L\cup \{(Z,\downarrow)\}$ //Y's children to be visited from top
+            				\EndFor
+            			\EndIf
+            			 \If{$Y\in A$} //v-structure trails are active
+            				\For{each $Z\in Pa_Y$}
+            					\State $L\gets L\cup \{(Z,\uparrow)\}$ // Y's parents to be visited from bottom
+            				\EndFor
+            			\EndIf
+            		\EndIf
+            	\EndIf
+            \EndWhile
+            \State Return R
+        \end{algorithmic}  
+    \end{algorithm}  
+
+\subsection{I equivalence}
+\begin{itemize}
+\item[(1)] Proof: The two BNs, G and G', are I-equivalent if both graphs have the same set of trails and a trail is active in G if and only if it is active in G'.
+\paragraph{Solution:}First we assume that $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_1)$ and we show that $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_2)$.\\
+
+Lets look on the trail that between $X\in \mathbb{X}$ and $Y\in \mathbb{Y}$ that given $\mathbb{Z}$ is inactive in $G_1$, and because of the assumption this trail in $G_2$ is inactive too.  \\
+
+Thus, $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_1)$ implies that every trail between any pair $X\in \mathbb{X}$ and $Y\in \mathbb{Y}$ that given $\mathbb{Z}$ is inactive in $G_1$, and showed for each such a trail that it is inactive in $G_2$. Since the two graphs have the same trails, then $(\mathbb{X} \perp \mathbb{Y}|\mathbb{Z})\in I(G_2)$. Hence $I(G_1)\subset I(G_2)$, and by symmetry we also get that $I(G_2)\subset I(G_1)$, therefore $I(G_1) = I(G_2)$
+
+
+\item[(2)] Prove that a minimal active trail may only contain a triangle of the following form:
+\paragraph{Solution} Let first consider the trail:  $X_{i-1} \rightleftharpoons X_i \rightleftharpoons ... \rightleftharpoons X_{i+1}$. There are four following situations:
+\begin{itemize}
+\item $X_{i-1} \rightarrow X_i \rightarrow X_{i+1}$.Because these three variables form a triangle. There are two sub-cases in this situation:
+	\begin{itemize}
+		\item $X_{i-1} \rightarrow X_{i+1}$ In this situation, $X_{i-1} \rightarrow X_{i+1}$ will be an active trail, which breaks the minimal assumption.
+		\item $X_{i-1} \leftarrow X_{i+1}$ In this situation, there will be a cycle among these three variables.
+	\end{itemize}
+\item $X_{i-1} \leftarrow X_i \leftarrow X_{i+1}$.Because these three variables form a triangle. There are two sub-cases in this situation:
+	\begin{itemize}
+		\item $X_{i-1} \rightarrow X_{i+1}$ In this situation, there will be a cycle among these three variables.
+		\item $X_{i-1} \leftarrow X_{i+1}$ In this situation, $X_i \rightarrow X_{i-1} \leftarrow X_{i+1}$ is a v-structure. So there must be $X_{i-2}\leftarrow X_{i-1}$ to make the whole trail active. It follows $X_{i-2}\leftarrow X_{i-1}\leftarrow X_{i+1}$ is active, which breaks the minimal assumption.
+	\end{itemize}
+\item $X_{i-1} \rightarrow X_i \leftarrow X_{i+1}$.Because these three variables form a triangle. There are two sub-cases in this situation:
+	\begin{itemize}
+		\item $X_{i-1} \rightarrow X_{i+1}$ In this situation, $X_{i-2} \rightleftharpoons X_{i-1} \rightarrow X_{i+1}$ will be an active trail, which breaks the minimal assumption.
+		\item $X_{i-1} \leftarrow X_{i+1}$ In this situation, $X_{i-1} \rightarrow X_i \leftarrow X_{i+1}$ is a v-structure, so there must be $X_{i-2} \leftarrow X_{i-1}$. In this situation $X_{i-2}\leftarrow X_{i-1} \leftarrow X_{i+1}$ breaks the minimal assumption.
+	\end{itemize}
+\item  $X_{i-1} \leftarrow X_i \rightarrow X_{i+1}$ This is the situation we want to proof.
+\end{itemize}
+\item[(3)] Two Bayes networks, G and G', are I-equivalent if and only if G and G' have the same skeletons and the same set of immoralities.
+\paragraph{Solution:} 
+\subparagraph{Part one:}Prove that if G and G' have the same skeletons and the same set of immoralities then they are I-equivalent. So we need to prove if $(X\perp Y|Z)\in I(G)$, then $(X\perp Y|Z)\in I(G')$.\\
+Proof by contradiction.\\
+Assume  $(X\perp Y|Z)\in I(G)$ and $(X\perp Y|Z)\not\in I(G')$. So there is a minimal active trail between X and Y given Z in G', but blocked in G.For example $X_{i-1} \rightleftharpoons X_{i} \rightleftharpoons X_{i+1}$ is blocked in G. There are two situations it is blocks:
+\begin{itemize}
+\item[]Situation one: In $X_{i-1}, X_{i},X_{i+1}$, $X_i$ is observed and they form cascade or common parent structure in G, while they form v-structure in G'.Because they forms v-structure in G' and the trail is minimal, there is no link between $X_{i-1}$ and $X_{i+1}$(Problem 2's result). Thus this v-structure is a immorality in G'. So it should also be a immorality in G. This is a contradiction.
+\item[]Situation two: $X_{i-1}, X_{i},X_{i+1}$ are all unobserved and they form a v-structure in G, while in G' they don't form a v-structure. Thus $X_{i-1}, X_{i},X_{i+1}$ can not form a immorality, and there will be a edge between $X_{i-1}$ and $X_{i+1}$. It violates the assumption that $X_{i-1}$ and $X_{i+1}$ is blocked in G.
+\end{itemize} 
+
+\subparagraph{Part two:}Prove that two networks G and G' that induce the same conditional independence assumptions must have the same skeleton and the same immoralities. By Problem 1.3 we already proved that G and G' have the same skeleton, thus we only need to prove they have the same immoralities.\\
+Proof by contradiction:\\
+Two networks G and G' are I-equivalent, have the same skeleton but different immoralities. For example,$X_{i-1},X_i,X_{i+1}$ forms a immorality in G, but they form a cascade or common parent structure in G'. Given $X_i$ observed so the trail $X_{i-1}\rightarrow X_i \leftarrow X_{i+1}$ is active in G, where in G' this trail is inactive. This situation violates the Proposition 1, we proved.
+\end{itemize}
+
+\begin{algorithm}  
+        \caption{I-equivalent}  
+        \begin{algorithmic}[1]  
+            \Require Bayesian network graph's direct edge set {(X,Y)}: G1, G2;  
+            \Ensure Whether they are I-equivalent: Flag  \\
+            \Function {isIEquivalent}{G1,G2}\\
+            	//Whether two graphs have the same skeleton
+                \If {isSameSkeleton(G1,G2)=False}  
+                	\State \Return{False}
+                \EndIf\\
+                //Get immoralities of each graph
+                \State $M1\gets getImmoralities(G1)$
+                \State $M2\gets getImmoralities(G2)$
+                \If {M1 != M2}  
+                	\State \Return{False}
+                \EndIf
+                \State \Return{True}
+            \EndFunction\\
+            \\
+            
+            // Whether two graphs have the same skeleton
+            \Function {isSameSkeleton}{G1,G2}
+                \If {G1.size()!=G2.size()}
+                	\State \Return{False}
+                \EndIf
+                \For{$(X,Y)\in G1$}
+                	\If{$(X,Y)\notin G2$ and $(Y,X)\notin G2$ }
+                		\State \Return{False}
+                	\EndIf
+                \EndFor
+                \State \Return{True}
+            \EndFunction\\
+            \\
+            //Output the immoralities in the graph
+            \Function {getImmoralities}{G}\\
+			//Get the node Set V
+				\State $V \gets \emptyset$
+				\For{$(X,Y)\in G$}
+					\State $V\gets V\cup\{X,Y\}$
+                \EndFor
+            //Iteration all there node triple to find the immoralities
+            	\State $M\gets \emptyset$ //The set of all the immoralities
+            	\For{$X\in V$}
+            		\For{$Y\in V$}
+            			\For{$Z\in V$}
+            				\If{X,Y,Z are distinct and $(X,Y)\in G$ and $(Z,Y)\in G$}
+            					\If{$(X,Z)\not\in G$ and $(Z,X)\not\in G$ }
+            						\State $M=M\cup(X,Y,Z)$
+            					\EndIf					
+            				\EndIf
+            			\EndFor
+            		\EndFor
+            	\EndFor
+            	\State \Return{M}
+            \EndFunction
+        \end{algorithmic}  
+    \end{algorithm} 
+
+
+
+\newpage
+\section{Exact Inference}
+\subsection{Variable Elimination}
+\begin{align*}
+\alpha_{t+1}(j) &= p(z_{t+1}=j|x_{1,..,t+1}) \propto \sum_{i}p(z_{t+1}=j|z_{t}=i)p(x_{t+1}|z_{t+1}=j)p(z_{t}=i|x_{1,..,t})\\
+&\propto p(x_{t+1}|z_{t+1}=j)\sum_{i}p(z_{t+1}=j|z_{t}=i)\alpha_{t}(i)
+\end{align*}
+\begin{align*}
+\beta_{t-1}(j)&=P(x_{t,...,T}|z_{t-1}=j)\propto \sum_i P(x_t|z_t=i)P(z_t=i|z_{t-1}=j)P(x_{t+1,...,T}|z_t=i)\\
+&\propto \sum_i p(x_t|z_t=i)p(z_t=i|z_{t-1}=j)\beta_t(i)
+\end{align*}
+Then because
+\begin{align*}
+p(z_t=j|x_1,...,T)\propto \alpha_t(j)\beta_t(j)
+\end{align*}
+we can get
+$$p(z_t=j|x_1,...,T) =\frac{\alpha_t(j)\beta_t(j)}{\sum_i \alpha_t(i)\beta_t(i)}$$
+\subsection{Gaussian Belief Propagation}
+\begin{itemize}
+\item[(1)] Proof: $N(x|\mu_1,\lambda^{-1}_1) \times N(x|\mu_2, \lambda_2^{-1}) = CN(x|\mu, \lambda^{-1}) $
+\paragraph{Solution}
+\begin{align*}
+N(x|\mu_1,\lambda^{-1}_1) \times N(x|\mu_2, \lambda_2^{-1}) &= exp(-\frac{\lambda_1 (x-\mu_1)^2}{2}) \times exp(-\frac{\lambda_2 (x-\mu_2)^2}{2})\\
+&=exp(-\frac{1}{2}(\lambda_1 (x-\mu_1)^2 + \lambda_2 (x-\mu_2)^2)
+\end{align*}
+\begin{align*}
+\lambda_1 (x-\mu_1)^2 + \lambda_2 (x-\mu_2)^2 =&(\lambda_1+\lambda_2)x^2 -2(\lambda_1\mu_1+\lambda_2\mu_2)x+\lambda_1\mu_1^2+\lambda_2\mu_2^2\\
+=&(\lambda_1+\lambda_2)[x^2-\frac{2(\lambda_1\mu_1+\lambda_2\mu_2)}{\lambda_1+\lambda_2}x +(\frac{\lambda_1\mu_1+\lambda_2\mu_2}{\lambda_1+\lambda_2})^2]-\frac{(\lambda_1\mu_1+\lambda_2\mu_2)^2}{\lambda_1+\lambda_2}\\
++& \lambda_1\mu_1^2+\lambda_2\mu_2^2\\
+=&(\lambda_1+\lambda_2)[x-\frac{\lambda_1\mu_1+\lambda_2\mu_2}{\lambda_1+\lambda_2}]^2+\frac{\lambda_1\lambda_2}{\lambda_1+\lambda_2}(\mu_1-\mu_2)^2
+\end{align*}
+So we can get
+$$\lambda=\lambda_1+\lambda_2$$
+$$\mu=\frac{\lambda_1\mu_1+\lambda_2\mu_2}{\lambda_1+\lambda_2}$$
+$$C=\sqrt{\frac{\lambda_1\lambda_2}{2\pi(\lambda_1+\lambda_2)}}exp(-\frac{1}{2}\frac{\lambda_1\lambda_2}{\lambda_1+\lambda_2}(\mu_1-\mu_2)^2)$$
+
+\item[(2)] Solve for $m(x_t)$. Hint First solve for the messages passed into Node t's neighbor nodes from their neighbors excluding t, then use these messaged to represent $m(x_t)$
+\paragraph{Solution:}(Gaussian Belief Propagation:Theory and Application https://arxiv.org/pdf/0811.2518.pdf)\\
+$$N(\mu_{s/t},\lambda_{s/t})\propto \phi_s(x_s)\prod_{k\in N(s)/t}m_{ks}(x_s)$$
+$$\lambda_{s/t}=\lambda_{ss}+\sum_{k\in N(s)/t}\lambda_{ks}$$
+$$\mu_{s/t}=\lambda_{s/t}^{-1}(\lambda_{ss}\mu_{ss} +\sum_{k\in N(s)/t}\lambda_{ks}\mu_{ks}) $$
+Where $\lambda_{ks}$ and $\mu_{ks}$ are the precision and mean of the message $m_{ks}(x_s)$, and $\lambda_{ss}\triangleq A_{ss}$, $\mu_{ss}\triangleq\frac{b_s}{A_{ss}}$.\\
+Next we calculate $m_{st}(x_t)$
+\begin{align*}
+m_{st}(x_t)&=\int_{x_s} \phi_{s,t}(x_s,x_t)\phi_s(x_s)\prod_{k\in N(s)/t}m_{ks}(x_s)\\
+&\propto \int_{x_s} exp(-x_sA_{st}x_t)exp(-\lambda_{s/t}(x_s^2/2-\mu_{s/t}x_s))\\
+&= \int_{x_s} exp(-\lambda_{s/t}x_s^2/2 +(\lambda_{s/t}\mu_{s/t}-A_{st}x_t)x_i )\\
+&\propto exp((\lambda_{s/t}\mu_{s/t}-A_{st}x_t)^2/(2\lambda_{s/t}))\\
+&\propto N(\mu_{st}, \lambda_{st})
+\end{align*}
+Where $\mu_{st}$ and $\mu_{st}$ are the precision and mean of the message $m_{st}(x_t)$.
+$$\mu_{st} = \frac{\lambda_{s/t}\mu_{s/t}}{A_{st}} $$
+$$\lambda_{st}=-\frac{A_{st}^2}{\lambda_{s/t}}$$
+Then we can calculate $m(x_t)$
+\begin{align*}
+m(x_t)=\phi_t(x_t)\prod_{s\in N(t)}m_{st}(x_t)\propto N(\mu_t, \lambda_t^{-1})
+\end{align*}
+$$\lambda_t = \lambda_{tt} + \sum_{s\in N(t)} \lambda_{st}$$
+$$\mu_t = \lambda_t^{-1}(\lambda_{tt}\mu_{tt}+\sum_{s\in N(t)}\lambda_{st}\mu_{st})$$
+Where $\lambda_{tt} = A_{tt}$, $\mu_{tt}=\frac{b_t}{A_{tt}}$
+\end{itemize}
+
+
+
+
+
+
+\newpage
+\section{Undirected Graphical Models}
+\subsection{Ising Model \& Boltzmann Machine}
+\paragraph{Solution:}
+\begin{align*}
+exp(\sum_{(i,j)\in E} W_{ij}x_ix_j-\sum_{i\in V}u_ix_i)&\propto exp(\sum_{(i,j)\in E} 4W_{ij}(\frac{x_i}{2}+\frac{1}{2})(\frac{x_j}{2}+\frac{1}{2})
+-\sum_{(i,j)\in E}W_{ij}x_i
+-\sum_{(i,j)\in E}W_{ij}x_j
+-\sum_{i\in V}u_ix_i)\\
+&\propto exp[\sum_{(i,j)\in E} 4W_{ij}(\frac{x_i}{2}+\frac{1}{2})(\frac{x_j}{2}+\frac{1}{2})-\sum_{i\in V}(u_i + 2\sum_{j\in N(i)}W_{ij})x_i]\\
+&\propto exp[\sum_{(i,j)\in E} 4W_{ij}(\frac{x_i}{2}+\frac{1}{2})(\frac{x_j}{2}+\frac{1}{2})-\sum_{i\in V}2(u_i + 2\sum_{j\in N(i)}W_{ij})(\frac{x_i}{2}+\frac{1}{2})]
+\end{align*}
+Thus we can get:
+$$x_i' = \frac{x_i}{2}+\frac{1}{2} \in \{0,1\}$$
+$$W_{ij}'=4W_{ij}$$
+$$u_i'=2(u_i +2\sum_{j\in N(i)}{W_{ij}})$$
+
+\subsection{Determinantal Point Process}
+
+
+
+
+
+
+
+
+\end{document}
+
+\grid
